@@ -1,0 +1,52 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<!-- Заголовок посту -->
+<h1>{{ post.title }}</h1>
+<p class="text-muted">By {{ post.author }} on {{ post.created_at|date:"F j, Y" }}</p>
+<div class="post-content">
+    {{ post.content }}
+</div>
+
+<!-- Кнопки для редагування та видалення поста (якщо користувач є автором) -->
+{% if user.is_authenticated and post.author == user %}
+    <div class="mt-4">
+        <a href="{% url 'post_edit' post.pk %}" class="btn btn-warning">Edit Post</a>
+        <form method="post" action="{% url 'post_delete' post.pk %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Delete Post</button>
+        </form>
+    </div>
+{% endif %}
+
+<!-- Розділ коментарів -->
+<h2 class="mt-5">Comments</h2>
+<ul class="list-group">
+    {% for comment in post.comments.all %}
+        <li class="list-group-item">
+            <p><strong>{{ comment.author }}</strong>: {{ comment.content }}</p>
+            <p class="text-muted">{{ comment.created_at|date:"F j, Y, g:i a" }}</p>
+        </li>
+    {% empty %}
+        <li class="list-group-item">No comments yet.</li>
+    {% endfor %}
+</ul>
+
+<!-- Форма для додавання коментаря -->
+{% if user.is_authenticated %}
+    <h3 class="mt-4">Add a Comment</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_content">Your Comment</label>
+            <textarea name="content" id="id_content" class="form-control" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% else %}
+    <p><a href="{% url 'login' %}">Log in</a> to add a comment.</p>
+{% endif %}
+
+{% endblock %}
